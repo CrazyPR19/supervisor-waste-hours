@@ -48,6 +48,10 @@ def init_db():
         time_from TEXT NOT NULL,
         time_to TEXT NOT NULL,
         total_hours REAL NOT NULL,
+        reason_disruption TEXT NOT NULL,
+        responsibility_tag TEXT NOT NULL,
+        impact_type TEXT NOT NULL,
+        remarks TEXT,
         entry_date TEXT NOT NULL,
         created_at TEXT NOT NULL,
         FOREIGN KEY (project_id) REFERENCES projects(id),
@@ -101,7 +105,10 @@ def index():
         "SELECT id, project_name FROM projects WHERE is_active = 1 ORDER BY project_name"
     ).fetchall()
     conn.close()
-    return render_template("index.html", projects=projects)
+
+    today_str = datetime.now().strftime("%d-%b-%Y")
+
+    return render_template("index.html", projects=projects, today_str=today_str)
 
 
 @app.route("/get_structures/<int:project_id>")
@@ -125,6 +132,10 @@ def submit():
     people_count = request.form.get("people_count", "").strip()
     time_from = request.form.get("time_from", "").strip()
     time_to = request.form.get("time_to", "").strip()
+    reason_disruption = request.form.get("reason_disruption", "").strip()
+    responsibility_tag = request.form.get("responsibility_tag", "").strip()
+    impact_type = request.form.get("impact_type", "").strip()
+    remarks = request.form.get("remarks", "").strip()
 
     entry_date = date.today().isoformat()
     created_at = datetime.now().isoformat(timespec="seconds")
@@ -156,6 +167,18 @@ def submit():
 
     if not time_from or not time_to:
         flash("Both Timing From and Timing To are mandatory.", "danger")
+        return redirect(url_for("index"))
+    
+    if not reason_disruption:
+        flash("Reason for Disruption is mandatory.", "danger")
+        return redirect(url_for("index"))
+
+    if not responsibility_tag:
+        flash("Responsibility Tag is mandatory.", "danger")
+        return redirect(url_for("index"))
+
+    if not impact_type:
+        flash("Impact Type is mandatory.", "danger")
         return redirect(url_for("index"))
 
     try:
@@ -221,8 +244,9 @@ def submit():
 
     conn.execute("""
         INSERT INTO waste_hour_entries
-        (badge_no, project_id, structure_id, people_count, time_from, time_to, total_hours, entry_date, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (badge_no, project_id, structure_id, people_count, time_from, time_to, total_hours,
+         reason_disruption, responsibility_tag, impact_type, remarks, entry_date, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         badge_no,
         int(project_id),
@@ -231,6 +255,10 @@ def submit():
         time_from,
         time_to,
         round(total_hours, 2),
+        reason_disruption,
+        responsibility_tag,
+        impact_type,
+        remarks,
         entry_date,
         created_at
     ))
@@ -240,6 +268,7 @@ def submit():
 
     flash("Waste hours record saved successfully.", "success")
     return redirect(url_for("records"))
+
 
 
 @app.route("/records")
@@ -254,6 +283,9 @@ def records():
                w.time_from,
                w.time_to,
                w.total_hours,
+               w.reason_disruption,
+               w.responsibility_tag,
+               w.impact_type,
                w.entry_date,
                w.created_at
         FROM waste_hour_entries w
@@ -276,6 +308,9 @@ def download_excel():
                w.time_from,
                w.time_to,
                w.total_hours,
+               w.reason_disruption,
+               w.responsibility_tag,
+               w.impact_type,
                w.entry_date,
                w.created_at
         FROM waste_hour_entries w
@@ -289,7 +324,6 @@ def download_excel():
     ws = wb.active
     ws.title = "Waste Hours Records"
 
-    # Header row
     headers = [
         "ID",
         "Badge No",
@@ -299,12 +333,14 @@ def download_excel():
         "Time From",
         "Time To",
         "Total Hours",
+        "Reason for Disruption",
+        "Responsibility Tag",
+        "Impact Type",
         "Entry Date",
         "Created At"
     ]
     ws.append(headers)
 
-    # Data rows
     for row in rows:
         ws.append([
             row["id"],
@@ -315,11 +351,13 @@ def download_excel():
             row["time_from"],
             row["time_to"],
             row["total_hours"],
+            row["reason_disruption"],
+            row["responsibility_tag"],
+            row["impact_type"],
             row["entry_date"],
             row["created_at"]
         ])
 
-    # Optional: auto width
     for column in ws.columns:
         max_length = 0
         column_letter = column[0].column_letter
