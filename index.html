@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="title">Field Disruption & Downtime Capture</div>
+	<div class="subtitle" style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+		<span>Record real-time operational interruptions for accurate impact tracking and analysis</span>
+		<span style="font-weight: 600; color: #2563eb; white-space: nowrap;">{{ today_str }}</span>
+	</div>
+</div>
+
+    <form method="POST" action="/submit">
+        <div class="grid">
+            <div class="field">
+                <label>Supervisor Badge Number *</label>
+                <input type="text" name="badge_no" maxlength="10" inputmode="numeric" pattern="[0-9]+" required>
+            </div>
+
+            <div class="field">
+                <label>Affected Manpower Count *</label>
+                <input type="number" name="people_count" min="1" required>
+            </div>
+
+            <div class="field">
+                <label>Project *</label>
+                <select name="project_id" id="project_id" required>
+                    <option value="">-- Select Project --</option>
+                    {% for p in projects %}
+                        <option value="{{ p.id }}">{{ p.project_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Structure *</label>
+                <select name="structure_id" id="structure_id" required>
+                    <option value="">-- Select Structure --</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Timing From *</label>
+                <input type="time" name="time_from" required>
+            </div>
+
+            <div class="field">
+                <label>Timing To *</label>
+                <input type="time" name="time_to" required>
+            </div>
+
+            <div class="field">
+				<label>Reason for Disruption *</label>
+				<select name="reason_disruption" required>
+					<option value="">-- Select Reason --</option>
+					<option value="Force Majeure / Security Alert">Force Majeure / Security Alert</option>
+					<option value="Weather Conditions">Weather Conditions</option>
+					<option value="Manpower Issue">Manpower Issue</option>
+					<option value="Equipment Breakdown">Equipment Breakdown</option>
+					<option value="Material Unavailability">Material Unavailability</option>
+					<option value="Engineering / Drawing Issue">Engineering / Drawing Issue</option>
+					<option value="Planning / Sequence Issue">Planning / Sequence Issue</option>
+					<option value="Rework / Quality Issue">Rework / Quality Issue</option>
+					<option value="HSE Stop Work">HSE Stop Work</option>
+					<option value="Permit / Approval Delay">Permit / Approval Delay</option>
+					<option value="Logistics / Yard Constraint">Logistics / Yard Constraint</option>
+					<option value="Client / Third Party Delay">Client / Third Party Delay</option>
+					<option value="Utilities Failure">Utilities Failure</option>
+					<option value="Others">Others</option>
+				</select>
+			</div>
+
+            <div class="field">
+                <label>Responsibility Tag *</label>
+                <select name="responsibility_tag" required>
+                    <option value="">-- Select Responsibility --</option>
+                    <!-- <option value="Construction">Construction</option>
+                    <option value="Engineering">Engineering</option>
+                    <option value="Planning">Planning</option>
+                    <option value="Material">Material</option>
+                    <option value="QA/QC">QA/QC</option> -->
+                    <option value="Client">Client</option>
+                    <option value="Contractor">Contractor (Internal)</option>
+                    <option value="Subcontractor">Subcontractor</option>
+                    <option value="Other">External</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Impact Type *</label>
+                <select name="impact_type" required>
+                    <option value="">-- Select Impact Type --</option>
+                    <option value="Full Stoppage">Full Stoppage</option>
+                    <option value="Partial Loss">Partial Loss</option>
+                    <option value="Reduced Productivity">Reduced Productivity</option>
+                    <option value="Rework">Rework</option>
+                    <option value="Delayed Start">Delayed Start</option>
+                    <option value="Idle Time">Idle Time</option>
+                </select>
+            </div>
+
+            <div class="field full-width">
+                <label>Remarks / Description (Optional)</label>
+                <textarea name="remarks" rows="4" placeholder="Enter remarks or disruption description here..."
+                    style="padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 15px; outline: none; width: 100%; box-sizing: border-box;"></textarea>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button type="submit" class="btn btn-primary">Save Record</button>
+            <a href="/records" class="btn btn-secondary">View Records</a>
+        </div>
+    </form>
+</div>
+
+<script>
+document.getElementById("project_id").addEventListener("change", function () {
+    const projectId = this.value;
+    const structureDropdown = document.getElementById("structure_id");
+
+    structureDropdown.innerHTML = '<option value="">-- Select Structure --</option>';
+
+    if (projectId) {
+        fetch(`/get_structures/${projectId}`)
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(item => {
+                    const option = document.createElement("option");
+                    option.value = item.id;
+                    option.textContent = item.name;
+                    structureDropdown.appendChild(option);
+                });
+            });
+    }
+});
+</script>
+{% endblock %}

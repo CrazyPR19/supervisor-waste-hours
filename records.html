@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="title">Recorded Waste Hours</div>
+    <div class="subtitle">All submitted records.</div>
+
+    <div class="actions" style="margin-bottom: 15px;">
+        <a href="/" class="btn btn-primary">Add New Record</a>
+        <a href="/download_excel" class="btn btn-secondary">Download Excel</a>
+    </div>
+
+		<div class="table-responsive">
+			<table>
+				<thead>
+					<tr>
+						<th>Badge No</th>
+						<th>Project</th>
+						<th>Structure</th>
+						<th>People</th>
+						<th>From</th>
+						<th>To</th>
+						<th>Total Hours</th>
+						<th>Reason for Disruption</th>
+						<th>Responsibility Tag</th>
+						<th>Impact Type</th>
+						<th>Entry Date</th>
+						<th>Created At</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for row in rows %}
+					<tr>
+						<td>{{ row.badge_no }}</td>
+						<td>{{ row.project_name }}</td>
+						<td>{{ row.structure_name }}</td>
+						<td>{{ row.people_count }}</td>
+						<td>{{ row.time_from }}</td>
+						<td>{{ row.time_to }}</td>
+						<td>{{ row.total_hours }}</td>
+						<td>{{ row.reason_disruption }}</td>
+						<td>{{ row.responsibility_tag }}</td>
+						<td>{{ row.impact_type }}</td>
+						<td>{{ row.entry_date }}</td>
+						<td>{{ row.created_at }}</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+	</div>
+</div>
+{% endblock %}
